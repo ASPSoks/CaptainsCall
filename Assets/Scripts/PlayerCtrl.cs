@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class PlayerCtrl : MonoBehaviour
 {
+    //declaração das variáveis que dá pra mudar na tela do unity
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _cannonballSpeed = 7f;
 
     [SerializeField] private float _fireCooldown = 1.5f;
     
+    //declaração de mais variáveis
     private Vector2 _movement;
     private Rigidbody2D _rb;
     private Animator _animator;
@@ -27,6 +29,7 @@ public class PlayerCtrl : MonoBehaviour
         _animator = GetComponent<Animator>();
     }
 
+//função que pega o aviso do input manager para acionar a função que dispara o canhão
     private void OnEnable(){
         InputManager.OnFire += FireCannon;
     }
@@ -36,17 +39,22 @@ public class PlayerCtrl : MonoBehaviour
     }
     private void Update()
     {
+        //Movimentação do navio
         _movement.Set(InputManager.Movement.x, InputManager.Movement.y);
         _rb.velocity = _movement*_moveSpeed;
         _animator.SetFloat(_horizontal, _movement.x);
         _animator.SetFloat(_vertical, _movement.y);
+
+        //if que faz com que o navio mantenha-se apontado para a última direção em que ele se movimentou
         if (_movement != Vector2.zero)
         {
             _animator.SetFloat(_lastHorizontal, _movement.x);
             _animator.SetFloat(_lastVertical, _movement.y);
         }
+        //chama a função que atualiza a posição da mira
         UpdateCrossHairPosition();
     }
+    //função que posiciona a mira onde o mouse está
     private void UpdateCrossHairPosition()
     {
        
@@ -56,6 +64,7 @@ public class PlayerCtrl : MonoBehaviour
         
         crossHair.transform.position = mouseWorldPosition;
     }
+    //função de tiro
     private void FireCannon()
     {
         // Verifica se o cooldown terminou (se passou 1.5 segundos desde o último disparo)
