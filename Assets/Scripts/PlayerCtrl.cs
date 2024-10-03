@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class PlayerCtrl : MonoBehaviour
@@ -9,7 +10,7 @@ public class PlayerCtrl : MonoBehaviour
     [SerializeField] private float _cannonballSpeed = 7f;
 
     [SerializeField] private float _fireCooldown = 1.5f;
-    
+
     //declaração de mais variáveis
     private Vector2 _movement;
     private Rigidbody2D _rb;
@@ -18,30 +19,34 @@ public class PlayerCtrl : MonoBehaviour
 
     public GameObject crossHair;
 
-     private float _lastFireTime;
+    private List<GameObject> _cannonballs;
+    private float _lastFireTime;
     private const string _horizontal = "Horizontal";
     private const string _vertical = "Vertical";
     private const string _lastHorizontal = "LastHorizontal";
     private const string _lastVertical = "LastVertical";
     private void Awake()
     {
+        _cannonballs = new List<GameObject>();
         _rb = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
     }
 
-//função que pega o aviso do input manager para acionar a função que dispara o canhão
-    private void OnEnable(){
+    //função que pega o aviso do input manager para acionar a função que dispara o canhão
+    private void OnEnable()
+    {
         InputManager.OnFire += FireCannon;
     }
-    private void OnDisable() 
+    private void OnDisable()
     {
-        InputManager.OnFire -= FireCannon; 
+        InputManager.OnFire -= FireCannon;
     }
     private void Update()
     {
+        if (InputManager.isPaused) { return; }
         //Movimentação do navio
         _movement.Set(InputManager.Movement.x, InputManager.Movement.y);
-        _rb.velocity = _movement*_moveSpeed;
+        _rb.velocity = _movement * _moveSpeed;
         _animator.SetFloat(_horizontal, _movement.x);
         _animator.SetFloat(_vertical, _movement.y);
 
@@ -53,15 +58,16 @@ public class PlayerCtrl : MonoBehaviour
         }
         //chama a função que atualiza a posição da mira
         UpdateCrossHairPosition();
+        DeleteOutOfReachCannonballs();
     }
     //função que posiciona a mira onde o mouse está
     private void UpdateCrossHairPosition()
     {
-       
-        Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(InputManager.MousePosition);
-        mouseWorldPosition.z = 0; 
 
-        
+        Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(InputManager.MousePosition);
+        mouseWorldPosition.z = 0;
+
+
         crossHair.transform.position = mouseWorldPosition;
     }
     //função de tiro
@@ -83,9 +89,23 @@ public class PlayerCtrl : MonoBehaviour
             // Define a velocidade da bola de canhão na direção do cursor
             cannonball.GetComponent<Rigidbody2D>().velocity = direction * _cannonballSpeed;
 
+            _cannonballs.Add(cannonball);
+
             // Atualiza o tempo do último disparo
             _lastFireTime = Time.time;
         }
     }
-    
+
+    private void DeleteOutOfReachCannonballs()
+    {
+        _cannonballs = new List<GameObject> (_cannonballs.Where(cannonball =>
+        {
+            Vector3 screenPoint = Camera.main.WorldToViewportPoint(cannonball.GetComponent<Transform>().position);
+            bool isVisible = screenPoint.z > 0 &&
+                         screenPoint.x > 0 && screenPoint.x < 1 &&
+                         screenPoint.y > 0 && screenPoint.y < 1;
+            if (!isVisible) { Destroy(cannonball); }
+            return isVisible;
+        }));
+    }
 }
