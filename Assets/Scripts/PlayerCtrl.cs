@@ -5,22 +5,24 @@ using UnityEngine;
 
 public class PlayerCtrl : MonoBehaviour
 {
-    //declaração das variáveis que dá pra mudar na tela do unity
-    [SerializeField] private float _moveSpeed = 5f;
-    [SerializeField] private float _cannonballSpeed = 7f;
+    public GameObject cannonballPrefab;
+    private List<GameObject> _cannonballs;
+    public GameObject crossHair;
 
+    [SerializeField] private float _cannonballSpeed = 7f;
     [SerializeField] private float _fireCooldown = 1.5f;
+    private float _lastFireTime;
+
 
     //declaração de mais variáveis
     private Vector2 _movement;
-    private Rigidbody2D _rb;
     private Animator _animator;
-    public GameObject cannonballPrefab;
+    [SerializeField] private float _moveSpeed = 5f;
 
-    public GameObject crossHair;
+    private Rigidbody2D _rb;
+    public ContactFilter2D movementFilter;
+    private readonly List<RaycastHit2D> _hits = new();
 
-    private List<GameObject> _cannonballs;
-    private float _lastFireTime;
     private const string _horizontal = "Horizontal";
     private const string _vertical = "Vertical";
     private const string _lastHorizontal = "LastHorizontal";
@@ -30,6 +32,7 @@ public class PlayerCtrl : MonoBehaviour
         _cannonballs = new List<GameObject>();
         _rb = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
+        _rb.freezeRotation = true;
     }
 
     //função que pega o aviso do input manager para acionar a função que dispara o canhão
@@ -41,14 +44,17 @@ public class PlayerCtrl : MonoBehaviour
     {
         InputManager.OnFire -= FireCannon;
     }
-    private void Update()
+    private void FixedUpdate()
     {
         if (InputManager.isPaused) { return; }
-        //Movimentação do navio
-        _movement.Set(InputManager.Movement.x, InputManager.Movement.y);
-        _rb.velocity = _movement * _moveSpeed;
-        _animator.SetFloat(_horizontal, _movement.x);
-        _animator.SetFloat(_vertical, _movement.y);
+
+        _hits.Clear();
+        int count = _rb.Cast(_movement, movementFilter, _hits.ToArray(), _moveSpeed * Time.fixedDeltaTime);
+        if (count == 0)
+        {
+            MovePlayer();
+        }
+
 
         //if que faz com que o navio mantenha-se apontado para a última direção em que ele se movimentou
         if (_movement != Vector2.zero)
@@ -59,6 +65,15 @@ public class PlayerCtrl : MonoBehaviour
         //chama a função que atualiza a posição da mira
         UpdateCrossHairPosition();
         DeleteOutOfReachCannonballs();
+    }
+
+    private void MovePlayer()
+    {
+        //Movimentação do navio
+        _movement.Set(InputManager.Movement.x, InputManager.Movement.y);
+        _rb.velocity = _movement * _moveSpeed;
+        _animator.SetFloat(_horizontal, _movement.x);
+        _animator.SetFloat(_vertical, _movement.y);
     }
     //função que posiciona a mira onde o mouse está
     private void UpdateCrossHairPosition()
@@ -98,7 +113,7 @@ public class PlayerCtrl : MonoBehaviour
 
     private void DeleteOutOfReachCannonballs()
     {
-        _cannonballs = new List<GameObject> (_cannonballs.Where(cannonball =>
+        _cannonballs = new List<GameObject>(_cannonballs.Where(cannonball =>
         {
             Vector3 screenPoint = Camera.main.WorldToViewportPoint(cannonball.GetComponent<Transform>().position);
             bool isVisible = screenPoint.z > 0 &&
