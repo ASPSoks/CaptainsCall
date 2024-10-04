@@ -32,6 +32,7 @@ public class PlayerCtrl : MonoBehaviour
         _cannonballs = new List<GameObject>();
         _rb = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
+        _rb.freezeRotation = true;
     }
 
     //função que pega o aviso do input manager para acionar a função que dispara o canhão
@@ -47,12 +48,13 @@ public class PlayerCtrl : MonoBehaviour
     {
         if (InputManager.isPaused) { return; }
 
+        _hits.Clear();
         int count = _rb.Cast(_movement, movementFilter, _hits.ToArray(), _moveSpeed * Time.fixedDeltaTime);
         if (count == 0)
         {
             MovePlayer();
         }
-        
+
 
         //if que faz com que o navio mantenha-se apontado para a última direção em que ele se movimentou
         if (_movement != Vector2.zero)
@@ -111,7 +113,7 @@ public class PlayerCtrl : MonoBehaviour
 
     private void DeleteOutOfReachCannonballs()
     {
-        _cannonballs = new List<GameObject> (_cannonballs.Where(cannonball =>
+        _cannonballs = new List<GameObject>(_cannonballs.Where(cannonball =>
         {
             Vector3 screenPoint = Camera.main.WorldToViewportPoint(cannonball.GetComponent<Transform>().position);
             bool isVisible = screenPoint.z > 0 &&
