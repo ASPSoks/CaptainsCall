@@ -511,7 +511,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ecd8db994df59a4c9bb4e31d1eb71d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _maxHealth: 1000
+  _maxHealth: 500
   healthBar: {fileID: 1504830115}
 --- !u!60 &193641521
 PolygonCollider2D:
@@ -4875,6 +4875,7 @@ GameObject:
   - component: {fileID: 1800297252}
   - component: {fileID: 1800297256}
   - component: {fileID: 1800297257}
+  - component: {fileID: 1800297258}
   m_Layer: 0
   m_Name: navio
   m_TagString: Untagged
@@ -5036,7 +5037,7 @@ PolygonCollider2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1800297251}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Density: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -5352,6 +5353,51 @@ PolygonCollider2D:
     - - {x: 0.600586, y: 18.750002}
       - {x: 0.600586, y: 18.750002}
   m_UseDelaunayMesh: 0
+--- !u!61 &1800297258
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1800297251}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.15119171, y: 0.6047821}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 28.505861, y: 60.000004}
+    newSize: {x: 28.505861, y: 60.000004}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 14.898201, y: 58.790436}
+  m_EdgeRadius: 0
 --- !u!1 &1871088834
 GameObject:
   m_ObjectHideFlags: 0
