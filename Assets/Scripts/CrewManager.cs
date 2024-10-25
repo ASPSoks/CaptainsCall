@@ -4,132 +4,101 @@ using UnityEngine;
 
 public class CrewManager : MonoBehaviour
 {
-    public List<CrewMember> crewMembers; // Lista de todos os membros da tripulação no navio
-    public ShipGraph shipGraph; // Referência ao sistema de grafo do navio
+    public List<CrewMember> crewMembers; // List of all crew members on the ship
+    public ShipGraph shipGraph; // Reference to the ship's graph system
 
-    public ShipGraphNode crewPosition; // Posição atual da tripulação (nó inicial)
-    public ShipGraphNode targetCannon; // Nó do canhão alvo
+    public ShipGraphNode crewPosition; // Current position of the crew (starting node)
+    public HealthBar healthBar; // Reference to the health bar script
+    public ParticleSystem repairParticles; // Reference to the particle system for repair
+    public bool IsBusy = false;
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) // Aciona o movimento da tripulação (exemplo: tecla de espaço)
+        // Trigger random damage repair with space
+        if (Input.GetKeyDown(KeyCode.Space)) 
         {
-            // Encontra o caminho mais curto da posição da tripulação até o canhão alvo
-            List<Node> path = Dijkstra.FindShortestPath(crewPosition, targetCannon); // Garante o tipo correto
-
+            ShipGraphNode damageLocation = GetRandomDamageLocation(); // Get a random damage location
+            List<Node> path = Dijkstra.FindShortestPath(crewPosition, damageLocation); // Find the shortest path
+            
             if (path != null)
             {
-                Debug.Log("Caminho mais curto encontrado!");
-                foreach (Node node in path)
-                {
-                    Debug.Log("Mover para: " + node.nodeName); // O nó possui nodeName
-                }
+                Debug.Log("Shortest path found!");
+                MoveToDamageLocation(path);
             }
             else
             {
-                Debug.Log("Nenhum caminho encontrado!");
+                Debug.Log("No path found!");
             }
         }
     }
 
-    public void AssignCrewToTask(ShipGraphNode targetNode)
+    public ShipGraphNode GetRandomDamageLocation()
     {
-        CrewMember closestCrew = null;
-        float shortestDistance = Mathf.Infinity;
+        // Get a random damage location from the graph nodes
+        int randomIndex = Random.Range(0, shipGraph.nodes.Count);
+        
+        // Return the random node directly since all are ShipGraphNode
+        return shipGraph.nodes[randomIndex];
+    }
 
-        foreach (CrewMember crew in crewMembers)
+    private void MoveToDamageLocation(List<Node> path)
+    {
+        // Here you would normally initiate movement to the target node
+        StartRepair(); // Start the repair process once at the target node
+    }
+
+    public void StartRepair()
+    {
+        Debug.Log("Current Health: " + healthBar.CurrentHealth);
+        Debug.Log("Max Health: " + healthBar.MaxHealth);
+        
+        // Use the public properties to access the health values
+        if (!IsBusy && healthBar.CurrentHealth < healthBar.MaxHealth)
         {
-            if (!crew.IsBusy)
+            Debug.Log("Repair started");
+            IsBusy = true;
+            repairParticles.Play(); // Start shining effect
+            StartCoroutine(RepairShip());
+        }
+        else
+        {
+            Debug.Log("Repair not needed or already in progress");
+        }
+    }
+
+    private IEnumerator RepairShip()
+    {
+        float repairDuration = 2f; // Total duration of the repair
+        float healthToRepair = 20f; // Amount of health to repair
+        float elapsed = 0f;
+
+        while (elapsed < repairDuration)
+        {
+            // Gradually fill the health bar
+            healthBar.CurrentHealth += (healthToRepair / repairDuration) * Time.deltaTime;
+            if (healthBar.CurrentHealth > healthBar.MaxHealth)
             {
-                // Encontra o caminho mais curto e mede seu comprimento
-                List<Node> path = Dijkstra.FindShortestPath(crew.currentNode, targetNode); // Usa o tipo Node
-                if (path != null && path.Count < shortestDistance)
-                {
-                    shortestDistance = path.Count;
-                    closestCrew = crew;
-                }
+                healthBar.CurrentHealth = healthBar.MaxHealth; // Cap the health to max
             }
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-        if (closestCrew != null)
-        {
-            // Atribui a tarefa e move o membro da tripulação
-            closestCrew.AssignTask(targetNode);
-        }
+        repairParticles.Stop(); // Stop the shining effect
+        IsBusy = false;
+        Debug.Log("Repair complete! Current Health: " + healthBar.CurrentHealth);
     }
 }
+
 
 public class CrewMember : MonoBehaviour
 {
     public ShipGraphNode currentNode; // Posição atual do membro da tripulação
     public bool IsBusy = false;
 
-    public ParticleSystem movementParticles; // Efeito de partículas para movimento
-    public ParticleSystem repairParticles; // Efeito de partículas para reparo
-    public LineRenderer lineRenderer; // Atribua isso no inspetor do Unity
+    // You can remove the following if you don't need them
+    public ParticleSystem movementParticles; // Efeito de partículas para movimento (not used)
+    public ParticleSystem repairParticles; // Efeito de partículas para reparo (not used)
 
-    public void AssignTask(ShipGraphNode targetNode)
-    {
-        IsBusy = true;
-        movementParticles.Play(); // Inicia o efeito de partículas de movimento
-        StartCoroutine(MoveAlongPath(targetNode));
-    }
-
-    private IEnumerator MoveAlongPath(ShipGraphNode targetNode)
-    {
-        List<Node> path = Dijkstra.FindShortestPath(currentNode, targetNode); // Garante o tipo correto
-        
-        movementParticles.Play(); // Inicia o efeito de partículas durante o movimento
-        DrawPath(path); // Visualiza o caminho
-        
-        foreach (Node node in path)
-        {
-            while (Vector3.Distance(transform.position, node.position) > 0.1f)
-            {
-                transform.position = Vector3.MoveTowards(transform.position, node.position, Time.deltaTime * 2);
-                yield return null;
-            }
-            currentNode = (ShipGraphNode)node; // Faz cast do nó para ShipGraphNode se necessário
-        }
-
-        movementParticles.Stop(); // Para o efeito de partículas após a conclusão do movimento
-        lineRenderer.positionCount = 0; // Limpa a linha após o movimento
-        IsBusy = false;
-    }
-
-    private void DrawPath(List<Node> path)
-    {
-        lineRenderer.positionCount = path.Count;
-        
-        for (int i = 0; i < path.Count; i++)
-        {
-            lineRenderer.SetPosition(i, path[i].position);
-        }
-    }
-
-    public void AssignRepairTask()
-    {
-        IsBusy = true;
-        movementParticles.Play(); // Inicia o efeito de partículas de movimento
-        StartCoroutine(RepairShip());
-    }
-
-    private IEnumerator RepairShip()
-    {
-        repairParticles.Play(); // Inicia o efeito de partículas de reparo
-
-        float repairDuration = 2f; // Define a duração para o processo de reparo
-        float repairStartTime = Time.time; // Registra o tempo de início
-
-        while (Time.time < repairStartTime + repairDuration) // Verifica se a duração do reparo foi alcançada
-        {
-            // Implemente a lógica de reparo aqui, por exemplo, incremente a saúde do navio
-            // Exemplo: shipHealth += repairAmount;
-
-            yield return null; // espera até o próximo quadro
-        }
-
-        repairParticles.Stop(); // Para o efeito de partículas após a conclusão do reparo
-        IsBusy = false; // Marca o membro da tripulação como não ocupado
-    }
+    // In this case, we won't need movement logic since you don't want visual representation.
 }

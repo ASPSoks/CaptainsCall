@@ -4,23 +4,23 @@ using UnityEngine;
 
 public class ShipGraph : MonoBehaviour
 {
-    public List<Node> nodes = new List<Node>();
+    public List<ShipGraphNode> nodes = new List<ShipGraphNode>(); // Use ShipGraphNode
 
     // Função para inicializar o gráfico do navio
     void Start()
     {
-        // Exemplo: Definir os nós
-        Node frenteA = new Node("Frente A", new Vector2(0, 5));
-        Node meioA = new Node("Meio A", new Vector2(0, 0));
+        // Exemplo: Definir os nós como ShipGraphNode
+        ShipGraphNode frenteA = new ShipGraphNode("Frente A", new Vector2(0, 5));
+        ShipGraphNode meioA = new ShipGraphNode("Meio A", new Vector2(0, 0));
         
-        Node canhaoEsq1 = new Node("Canhão Esq. 1", new Vector2(-5, 0));
-        Node canhaoDir1 = new Node("Canhão Dir. 1", new Vector2(5, 0));
+        ShipGraphNode canhaoEsq1 = new ShipGraphNode("Canhão Esq. 1", new Vector2(-5, 0));
+        ShipGraphNode canhaoDir1 = new ShipGraphNode("Canhão Dir. 1", new Vector2(5, 0));
         
-        Node canhaoEsq2 = new Node("Canhão Esq. 2", new Vector2(-5, -3));
-        Node canhaoDir2 = new Node("Canhão Dir. 2", new Vector2(5, -3));
+        ShipGraphNode canhaoEsq2 = new ShipGraphNode("Canhão Esq. 2", new Vector2(-5, -3));
+        ShipGraphNode canhaoDir2 = new ShipGraphNode("Canhão Dir. 2", new Vector2(5, -3));
         
-        Node salaControle = new Node("Sala de Controle", new Vector2(0, 3));
-        Node deposito = new Node("Depósito", new Vector2(0, -3));
+        ShipGraphNode salaControle = new ShipGraphNode("Sala de Controle", new Vector2(0, 3));
+        ShipGraphNode deposito = new ShipGraphNode("Depósito", new Vector2(0, -3));
 
         // Adicionar arestas (conexões entre nós)
         frenteA.AddEdge(meioA, 1.0f); // Custo de mover de Frente A para Meio A
