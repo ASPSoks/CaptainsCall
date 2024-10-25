@@ -15,13 +15,22 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Fire",
-                    "type": "Button",
-                    "id": "902188d9-e17e-4fd2-98c7-30f5aee2f01f",
-                    "expectedControlType": "Button",
+                    "name": "FireRight",
+                    "type": "Value",
+                    "id": "5d6d7dcc-06ab-4bb4-892c-40b80703d585",
+                    "expectedControlType": "Touch",
                     "processors": "",
                     "interactions": "",
-                    "initialStateCheck": false
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "FireLeft",
+                    "type": "Value",
+                    "id": "902188d9-e17e-4fd2-98c7-30f5aee2f01f",
+                    "expectedControlType": "Touch",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
                 },
                 {
                     "name": "AimHorizontal",
@@ -165,11 +174,11 @@
                 {
                     "name": "",
                     "id": "5440a744-4234-4d38-9d69-cc64aa33cd87",
-                    "path": "<Mouse>/leftButton",
+                    "path": "<Keyboard>/q",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Fire",
+                    "action": "FireLeft",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -203,6 +212,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "PauseUnpause",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "18823804-5d83-441d-9b59-7869a8b143b8",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "FireRight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
