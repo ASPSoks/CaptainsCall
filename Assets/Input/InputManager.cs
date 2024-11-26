@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting.Antlr3.Runtime;
@@ -7,64 +8,68 @@ using UnityEngine.InputSystem;
 public class InputManager : MonoBehaviour
 {
     public static bool isPaused;
-
     public static Vector2 Movement;
-    public static Vector2 MousePosition;
 
     private PlayerInput _playerInput;
-
     private InputAction _moveAction;
-    private InputAction _fireAction;
-    private InputAction _aimHorizontal;
-    private InputAction _aimVertical;
-
+    private InputAction _fireLeftAction;
+    private InputAction _fireRightAction;
     private InputAction _pauseUnpause;
-    [SerializeField] public GameObject pauseScreen;
+    public GameObject pauseScreen;
 
-    public static event System.Action OnFire;
+    public static event Action OnFireRight;
+    public static event Action OnFireLeft;
+
     private void Awake()
     {
-        //atribui às variáveis os inputs designados no "Controller"(Input System)
+        // Link inputs from the Input System
         _playerInput = GetComponent<PlayerInput>();
 
         _moveAction = _playerInput.actions["Mover"];
+        _fireLeftAction = _playerInput.actions["FireLeft"];
+        _fireRightAction = _playerInput.actions["FireRight"];
 
-        _fireAction = _playerInput.actions["Fire"];
-
-        _aimHorizontal = _playerInput.actions["AimHorizontal"];
-        _aimVertical = _playerInput.actions["AimVertical"];
-
-        isPaused = false;
         _pauseUnpause = _playerInput.actions["PauseUnpause"];
         pauseScreen.SetActive(false);
 
-        //Ativa a função de disparar quando recebe o input 
-        _fireAction.performed += Fire;
-
+        // Link the input to the shooting functions
+        _fireLeftAction.performed += FireLeft;
+        _fireRightAction.performed += FireRight;
     }
-    private void Update(){
-        isPaused = _pauseUnpause.WasPerformedThisFrame() ? !isPaused : isPaused;
+
+    private void Update()
+    {
+        // Toggle pause/unpause when the assigned button is pressed
+        if (_pauseUnpause.WasPerformedThisFrame())
+        {
+            isPaused = !isPaused;
+            if (isPaused)
+                Pause();
+            else
+                Unpause();
+        }
+
+        // Read movement input if the game is not paused
         if (!isPaused)
         {
-            Unpause();
-
+            Movement = _moveAction.ReadValue<Vector2>();
         }
-        else
-        {
-            Pause();
-        }
-
-        //movimentação do player e posição do mouse é lida;
-        Movement = _moveAction.ReadValue<Vector2>();
-        MousePosition = new Vector2(_aimHorizontal.ReadValue<float>(), _aimVertical.ReadValue<float>());
     }
 
-    //Ativação da função de tiro no PlayerCtrl
-    private void Fire(InputAction.CallbackContext context){
-        if (isPaused) { return; }
-        OnFire?.Invoke();
+    // Trigger the shooting event
+    private void FireRight(InputAction.CallbackContext context)
+    {
+        if (isPaused) return;
+        OnFireRight?.Invoke();
     }
 
+    private void FireLeft(InputAction.CallbackContext context)
+    {
+        if (isPaused) return;
+        OnFireLeft?.Invoke();
+    }
+
+    // Pause game
     public void Pause()
     {
         isPaused = true;
@@ -72,6 +77,7 @@ public class InputManager : MonoBehaviour
         pauseScreen.SetActive(true);
     }
 
+    // Unpause game
     public void Unpause()
     {
         isPaused = false;
@@ -79,6 +85,3 @@ public class InputManager : MonoBehaviour
         pauseScreen.SetActive(false);
     }
 }
-   
-
- 
