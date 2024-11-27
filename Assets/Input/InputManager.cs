@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
+    AudioManager audioManager;
     public static bool isPaused;
 
     public static Vector2 Movement;
@@ -24,6 +25,7 @@ public class InputManager : MonoBehaviour
     public static event System.Action OnFire;
     private void Awake()
     {
+        audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
         //atribui às variáveis os inputs designados no "Controller"(Input System)
         _playerInput = GetComponent<PlayerInput>();
 
@@ -63,6 +65,7 @@ public class InputManager : MonoBehaviour
     private void Fire(InputAction.CallbackContext context){
         if (isPaused) { return; }
         OnFire?.Invoke();
+         audioManager.PlaySFX(audioManager.cannon);
     }
 
     public void Pause()

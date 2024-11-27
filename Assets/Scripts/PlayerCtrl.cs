@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class PlayerCtrl : MonoBehaviour
 {
+    
+     AudioManager audioManager;
     public GameObject cannonballPrefab;
     private List<GameObject> _cannonballs;
     public GameObject crossHair;
@@ -29,6 +31,7 @@ public class PlayerCtrl : MonoBehaviour
     private const string _lastVertical = "LastVertical";
     private void Awake()
     {
+      audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
         _cannonballs = new List<GameObject>();
         _rb = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
@@ -103,9 +106,10 @@ public class PlayerCtrl : MonoBehaviour
 
             // Define a velocidade da bola de canhão na direção do cursor
             cannonball.GetComponent<Rigidbody2D>().velocity = direction * _cannonballSpeed;
-
+            audioManager.PlaySFX(audioManager.cannon);
             _cannonballs.Add(cannonball);
 
+            
             // Atualiza o tempo do último disparo
             _lastFireTime = Time.time;
         }

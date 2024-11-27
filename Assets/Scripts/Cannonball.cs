@@ -4,9 +4,12 @@ using UnityEngine;
 
 public class Cannonball : MonoBehaviour
 {
+    AudioManager audioManager;
     [SerializeField] private float _damage = 25f;    // Dano que a bola de canhão vai causar
     [SerializeField] private float _lifetime = 5f;   // Tempo de vida da bola de canhão antes de desaparecer
-
+    private void Awake(){
+        audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
+    }
     private void Start()
     {
         // Destroi a bola de canhão após o tempo definido em _lifetime
@@ -26,6 +29,7 @@ public class Cannonball : MonoBehaviour
             {
                 // Aplica o dano ao inimigo
                 enemy.TakeDamage(_damage);
+                audioManager.PlaySFX(audioManager.damage);
             }
 
             // Destrói a bola de canhão após o impacto
