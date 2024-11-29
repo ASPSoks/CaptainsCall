@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Enemy : MonoBehaviour
 {
@@ -42,8 +43,12 @@ public class Enemy : MonoBehaviour
 
         var playerNode = AStarManager.instance.FindNearestNode(playerPosition);
         var path = AStarManager.instance.GeneratePath(currentNode, playerNode);
-        var nextNode = path[1];
+        if (path == null || path.Count < 2)
+        {
+            return;
+        }
 
+        var nextNode = path[1];
         Debug.Log(nextNode.gameObject.name);
         transform.position = Vector2.MoveTowards(position, nextNode.transform.position, speed * Time.fixedDeltaTime);
 
@@ -77,5 +82,15 @@ public class Enemy : MonoBehaviour
             TakeDamage(25f); // Exemplo de dano de 25
             Destroy(other.gameObject); // Destrói a bola de canhão
         }
+
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.collider.CompareTag("Player"))
+        {
+            SceneManager.LoadScene(sceneName: "MainMenu", mode: LoadSceneMode.Single);
+        }
+        
     }
 }
