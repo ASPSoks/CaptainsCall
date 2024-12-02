@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Cannonball
   - Enemy
+  - Audio
   layers:
   - Default
   - TransparentFX

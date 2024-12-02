@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,107 +6,93 @@ using UnityEngine;
 
 public class PlayerCtrl : MonoBehaviour
 {
-    //declaração das variáveis que dá pra mudar na tela do unity
-    [SerializeField] private float _moveSpeed = 5f;
-    [SerializeField] private float _cannonballSpeed = 7f;
-
-    [SerializeField] private float _fireCooldown = 1.5f;
+    private AudioManager _audioManager;
+    private List<GameObject> _cannonballs;
+    public List<Cannon> _leftSideCannons = new();
+    public List<Cannon> _rightSideCannons = new();
 
     //declaração de mais variáveis
     private Vector2 _movement;
+    public float _moveSpeed = 250f;
+    public float _rotationSpeed = 150f;
+
     private Rigidbody2D _rb;
-    private Animator _animator;
-    public GameObject cannonballPrefab;
+    public ContactFilter2D movementFilter;
+    private readonly List<RaycastHit2D> _hits = new();
 
-    public GameObject crossHair;
 
-    private List<GameObject> _cannonballs;
-    private float _lastFireTime;
-    private const string _horizontal = "Horizontal";
-    private const string _vertical = "Vertical";
-    private const string _lastHorizontal = "LastHorizontal";
-    private const string _lastVertical = "LastVertical";
+
     private void Awake()
     {
+        _audioManager = GameObject.FindGameObjectWithTag("Audio").GetComponent<AudioManager>();
         _cannonballs = new List<GameObject>();
         _rb = GetComponent<Rigidbody2D>();
-        _animator = GetComponent<Animator>();
     }
 
     //função que pega o aviso do input manager para acionar a função que dispara o canhão
     private void OnEnable()
     {
-        InputManager.OnFire += FireCannon;
+        InputManager.OnFireRight += FireRight;
+        InputManager.OnFireLeft += FireLeft;
     }
     private void OnDisable()
     {
-        InputManager.OnFire -= FireCannon;
+        InputManager.OnFireRight -= FireRight;
+        InputManager.OnFireLeft -= FireLeft;
     }
-    private void Update()
+    private void FixedUpdate()
     {
         if (InputManager.isPaused) { return; }
+
+        _hits.Clear();
+        int count = _rb.Cast(_movement, movementFilter, _hits.ToArray(), _moveSpeed * Time.fixedDeltaTime);
+        if (count == 0)
+        {
+            MovePlayer();
+        }
+
+    }
+
+    private void MovePlayer()
+    {
         //Movimentação do navio
         _movement.Set(InputManager.Movement.x, InputManager.Movement.y);
-        _rb.velocity = _movement * _moveSpeed;
-        _animator.SetFloat(_horizontal, _movement.x);
-        _animator.SetFloat(_vertical, _movement.y);
+        _rb.rotation -= _movement.x * _rotationSpeed * Time.fixedDeltaTime;
+        _rb.velocity = _movement.y * _moveSpeed * transform.up;
 
-        //if que faz com que o navio mantenha-se apontado para a última direção em que ele se movimentou
-        if (_movement != Vector2.zero)
+        foreach (var cannon in _leftSideCannons)
         {
-            _animator.SetFloat(_lastHorizontal, _movement.x);
-            _animator.SetFloat(_lastVertical, _movement.y);
+            cannon.MoveCannon(_rb.velocity);
         }
-        //chama a função que atualiza a posição da mira
-        UpdateCrossHairPosition();
-        DeleteOutOfReachCannonballs();
+
+        foreach (var cannon in _rightSideCannons)
+        {
+            cannon.MoveCannon(_rb.velocity);
+        }
     }
-    //função que posiciona a mira onde o mouse está
-    private void UpdateCrossHairPosition()
+
+    private void FireRight()
     {
-
-        Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(InputManager.MousePosition);
-        mouseWorldPosition.z = 0;
-
-
-        crossHair.transform.position = mouseWorldPosition;
+        FireCannons(_rightSideCannons, new Vector2(transform.up.y, -transform.up.x));
+        _audioManager.PlaySFX(_audioManager.cannon);
     }
+
+    private void FireLeft()
+    {
+        FireCannons(_leftSideCannons, new Vector2(-transform.up.y, transform.up.x));
+        _audioManager.PlaySFX(_audioManager.cannon);
+    }
+
     //função de tiro
-    private void FireCannon()
+    private void FireCannons(List<Cannon> selectedCannons, Vector2 shootingDirection)
     {
-        // Verifica se o cooldown terminou (se passou 1.5 segundos desde o último disparo)
-        if (Time.time >= _lastFireTime + _fireCooldown)
+        foreach (var cannon in selectedCannons.Where(c => c.IsAvailableToShoot()))
         {
-            // Converte a posição do mouse (screen space) para o espaço do mundo
-            Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(InputManager.MousePosition);
-            mouseWorldPosition.z = 0; // Para garantir que estamos no plano 2D
-
-            // Calcula a direção da bola de canhão (do player até a mira)
-            Vector2 direction = (mouseWorldPosition - transform.position).normalized;
-
-            // Instancia a bola de canhão na posição do player
-            GameObject cannonball = Instantiate(cannonballPrefab, transform.position, Quaternion.identity);
-
-            // Define a velocidade da bola de canhão na direção do cursor
-            cannonball.GetComponent<Rigidbody2D>().velocity = direction * _cannonballSpeed;
-
-            _cannonballs.Add(cannonball);
-
-            // Atualiza o tempo do último disparo
-            _lastFireTime = Time.time;
+            GameObject cannonball = cannon.FireCannon(shootingDirection);
+            if (cannonball != null)
+            {
+                _cannonballs.Add(cannonball);
+            }
         }
-    }
-
-    private void DeleteOutOfReachCannonballs()
-    {
-        _cannonballs = new List<GameObject> (_cannonballs.Where(cannonball =>
-        {
-            Vector3 screenPoint = Camera.main.WorldToViewportPoint(cannonball.GetComponent<Transform>().position);
-            bool isVisible = screenPoint.z > 0 &&
-                         screenPoint.x > 0 && screenPoint.x < 1 &&
-                         screenPoint.y > 0 && screenPoint.y < 1;
-            if (!isVisible) { Destroy(cannonball); }
-            return isVisible;
-        }));
     }
 }
